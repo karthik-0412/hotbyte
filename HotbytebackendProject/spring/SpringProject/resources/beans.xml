@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context 
+                           http://www.springframework.org/schema/context/spring-context.xsd">
+
+    
+    <bean id="p1" class="org.springexample.SpringProject.Project">
+        <property name="pId" value="101"/>
+        <property name="duration" value="6 months"/>
+        <property name="cost" value="15000.00"/>
+    </bean>
+    
+    
+    <bean id="e1" class="org.springexample.SpringProject.Employee">
+        <property name="empId" value="1001"/>
+        <property name="name" value="Ramesh Raj"/>
+        <property name="salary" value="75000.00"/>
+        
+        <property name="address">
+            <map>
+                <entry key="home" value="123 Main St, Sultan"/>
+                <entry key="office" value="456 Palace Road, Tipu"/>
+            </map>
+        </property>
+        
+        <property name="project" ref="p1"/>
+    </bean>
+    
+</beans>
