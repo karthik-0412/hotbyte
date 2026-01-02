@@ -15,4 +15,5 @@ public interface UserService {
 	UserDTO getUserByUserName(String username);
 //	UserDTO createUser(UserCreateDTO userCreateDTO);
 	void updateUserStatus(int userId, UserStatus status);
+	boolean changePassword(String username, String oldPassword, String newPassword);
 }

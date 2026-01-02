@@ -2,6 +2,7 @@ package com.hexaware.service;
 
 import java.util.List;
 
+import com.hexaware.dto.DashboardDTO;
 import com.hexaware.dto.MenuCategoryDTO;
 import com.hexaware.dto.MenuDTO;
 import com.hexaware.dto.OrderDTO;
@@ -19,6 +20,8 @@ public interface RestaurantService {
 	RestaurantDTO getRestaurantByUserName(String username);
 	RestaurantDTO updateRestaurantStatus(int restaurantId, String status);
 	RestaurantDTO toggleStatusByUsername(String username, boolean open);
+//	DashboardDTO getDashboardDataForRestaurant(String username);
+	DashboardDTO getRestaurantDashboard(String username);
 
 //    // Menu Management
 //    MenuDTO addMenuItem(MenuDTO menuDTO);

@@ -32,9 +32,7 @@ public class OrderItem {
     @Column(name="item_name")
     private String itemName;
     
-//    @Column(name="image_url")
-//    private String imageUrl;
-//
+
     @Column(name = "price", nullable = false)
     private BigDecimal price; // price per item × quantity
 }

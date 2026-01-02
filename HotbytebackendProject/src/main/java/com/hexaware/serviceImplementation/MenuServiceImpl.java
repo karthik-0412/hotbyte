@@ -150,7 +150,8 @@ public class MenuServiceImpl implements MenuService{
     @Override
     public List<MenuDTO> viewAllMenus() {
         // Assuming current restaurant context, replace with actual logic
-        List<Menu> menus = menuRepository.findByRestaurantRestaurantId(1); // Placeholder
+//        List<Menu> menus = menuRepository.findByRestaurantRestaurantId(1); // Placeholder
+    	List<Menu> menus = menuRepository.findAll();
         return menus.stream()
                 .map(menuMapper::menuToMenuDto)
                 .collect(Collectors.toList());

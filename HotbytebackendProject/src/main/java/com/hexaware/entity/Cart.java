@@ -44,9 +44,6 @@ public class Cart {
 
    @Min(value = 1, message = "Quantity must be at least 1")
    private int quantity;
-
-//    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
-//    private List<CartItem> items;
     
     @NotNull(message = "Total price should not be null")
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
@@ -56,7 +53,8 @@ public class Cart {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
     
+    @ManyToOne
     @JoinColumn(name = "order_id")
-    private Integer orderId;
+    private Order order;
 
 }

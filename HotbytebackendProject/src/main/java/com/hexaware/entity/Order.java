@@ -98,6 +98,10 @@ public class Order {
 
     @Column(name = "subtotal")
     private BigDecimal subtotal;
+    
+    @Column(name = "preparation_time")
+    private Double preparationTime;
+
 
 
 }

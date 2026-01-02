@@ -16,8 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
-
+import com.hexaware.dto.DashboardDTO;
 import com.hexaware.dto.RestaurantDTO;
 import com.hexaware.service.RestaurantService;
 
@@ -86,6 +85,12 @@ public class RestaurantController {
         return ResponseEntity.ok(restaurantService.getRestaurantByUserName(username));
     }
 
+    @GetMapping("/dashboard")
+    public ResponseEntity<DashboardDTO> getDashboardData(Principal principal) {
+        String username = principal.getName();
+        DashboardDTO dashboard = restaurantService.getRestaurantDashboard(username);
+        return ResponseEntity.ok(dashboard);
+    }
 
 
 }

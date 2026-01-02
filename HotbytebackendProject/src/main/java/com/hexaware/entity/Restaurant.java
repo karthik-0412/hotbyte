@@ -65,6 +65,18 @@ public class Restaurant {
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+    
+    @Column(name = "opening_time")
+    private LocalTime openingTime;
+
+    @Column(name = "closing_time")
+    private LocalTime closingTime;
+
+    @Column(name = "delivery_radius")
+    private Double deliveryRadius;
+
+    @Column(name = "min_order_amount")
+    private Double minOrderAmount;
 
 
 

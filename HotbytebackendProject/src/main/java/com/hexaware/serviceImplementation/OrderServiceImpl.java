@@ -306,4 +306,14 @@ public class OrderServiceImpl implements OrderService {
         Order order = orders.get(0); // Since orderId is unique, take the first
         return orderMapper.orderToOrderDto(order);
     }
+    
+    @Override
+    public void rateOrder(int orderId, int rating, String review) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setRating(rating);
+        order.setReview(review);
+        orderRepository.save(order);
+    }
 }

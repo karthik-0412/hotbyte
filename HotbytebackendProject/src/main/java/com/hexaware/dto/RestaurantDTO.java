@@ -2,6 +2,8 @@ package com.hexaware.dto;
 
 import java.time.LocalTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,6 +38,15 @@ public class RestaurantDTO {
     private UserCreateDTO userdto;
     
     private AddressDTO addressdto;
+    
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime openingTime;
+
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime closingTime;
+    private Double deliveryRadius;
+    private Double minOrderAmount;
+
 
 
 

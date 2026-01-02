@@ -1,5 +1,6 @@
 package com.hexaware.serviceImplementation;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,17 +11,23 @@ import org.springframework.stereotype.Service;
 
 import com.hexaware.dto.AddressDTO;
 import com.hexaware.dto.CustomerDTO;
+import com.hexaware.dto.DashboardDTO;
 import com.hexaware.dto.MenuCategoryDTO;
 import com.hexaware.dto.MenuDTO;
 import com.hexaware.dto.OrderDTO;
+import com.hexaware.dto.OrderItemDTO;
+import com.hexaware.dto.OrderSummaryDTO;
+import com.hexaware.dto.PopularItemDTO;
 import com.hexaware.dto.RestaurantDTO;
 import com.hexaware.dto.UserCreateDTO;
 import com.hexaware.dto.UserDTO;
 import com.hexaware.entity.Address;
+import com.hexaware.entity.Cart;
 import com.hexaware.entity.Customer;
 import com.hexaware.entity.Menu;
 import com.hexaware.entity.MenuCategory;
 import com.hexaware.entity.Order;
+import com.hexaware.entity.OrderItem;
 import com.hexaware.entity.Restaurant;
 import com.hexaware.entity.User;
 import com.hexaware.enums.OrderStatus;
@@ -35,8 +42,10 @@ import com.hexaware.mapper.OrderMapper;
 import com.hexaware.mapper.RestaurantMapper;
 import com.hexaware.mapper.UserMapper;
 import com.hexaware.repository.AddressRepository;
+import com.hexaware.repository.CartRepository;
 import com.hexaware.repository.MenuCategoryRepository;
 import com.hexaware.repository.MenuRepository;
+import com.hexaware.repository.OrderItemRepository;
 import com.hexaware.repository.OrderRepository;
 import com.hexaware.repository.RestaurantRepository;
 import com.hexaware.repository.UserRepository;
@@ -69,6 +78,12 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Autowired
     private AddressRepository addressRepository;
+    
+    @Autowired
+    private CartRepository cartRepository;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
     
     @Autowired
     private ModelMapper modelMapper;
@@ -111,6 +126,7 @@ public class RestaurantServiceImpl implements RestaurantService {
             userCreateDTO.setRole(UserRole.RESTAURANT);
             userCreateDTO.setStatus(UserStatus.ACTIVE);
             userCreateDTO.setPassword(restaurantDTO.getUserdto().getPassword());
+            
 
 //            System.out.println("Creating user...");
             UserDTO createdUserDTO = userService.createUser(userCreateDTO);
@@ -131,6 +147,11 @@ public class RestaurantServiceImpl implements RestaurantService {
             Restaurant restaurant = restaurantMapper.restaurantDtoToRestaurant(restaurantDTO);
             restaurant.setUser(user);
             restaurant.setAddress(address);
+            restaurant.setDeliveryRadius(0.0);
+            restaurant.setMinOrderAmount(0.0);
+            restaurant.setOpeningTime(LocalTime.of(0, 0));
+            restaurant.setClosingTime(LocalTime.of(0, 0));
+
 
             try {
                 restaurant.setStatus(RestaurantStatus.valueOf(restaurantDTO.getStatus().toUpperCase()));
@@ -185,6 +206,21 @@ public class RestaurantServiceImpl implements RestaurantService {
         if (restaurantDTO.getStatus() != null) {
             restaurant.setStatus(RestaurantStatus.valueOf(restaurantDTO.getStatus().toUpperCase()));
         }
+        
+     // Validate presence explicitly
+        if (restaurantDTO.getDeliveryRadius() == null ||
+            restaurantDTO.getMinOrderAmount() == null ||
+            restaurantDTO.getOpeningTime() == null ||
+            restaurantDTO.getClosingTime() == null) {
+            throw new RuntimeException("All fields (deliveryRadius, minOrderAmount, openingTime, closingTime) are required.");
+        }
+
+        // Apply updates
+        restaurant.setDeliveryRadius(restaurantDTO.getDeliveryRadius());
+        restaurant.setMinOrderAmount(restaurantDTO.getMinOrderAmount());
+        restaurant.setOpeningTime(restaurantDTO.getOpeningTime());
+        restaurant.setClosingTime(restaurantDTO.getClosingTime());
+
 
         // ✅ Correctly handle Address update
         if (restaurantDTO.getAddressdto() != null && restaurantDTO.getAddressdto().getAddressId() != 0) {
@@ -285,6 +321,66 @@ public class RestaurantServiceImpl implements RestaurantService {
 	    restaurant = restaurantRepository.save(restaurant);
 	    return restaurantMapper.restaurantToRestaurantDto(restaurant);
 	}
+	
+
+	@Override
+	public DashboardDTO getRestaurantDashboard(String username) {
+	    Restaurant restaurant = restaurantRepository.findByUserUsername(username);
+	    if (restaurant == null) {
+	        throw new RuntimeException("Restaurant not found for username: " + username);
+	    }
+
+	    int totalOrders = orderRepository.countByRestaurant(restaurant);
+	    int menuItemCount = menuRepository.countByRestaurant(restaurant);
+	    double todaysRevenue = orderRepository.getTodaysRevenueForRestaurant(restaurant.getRestaurantId());
+
+	    // ✅ Calculate avg prep time using OrderItem -> Menu.cookingTime
+	    List<OrderItem> allOrderItems = orderItemRepository.findByOrderRestaurant(restaurant);
+	    int totalPrepTime = 0;
+	    int itemCount = 0;
+
+	    for (OrderItem item : allOrderItems) {
+	        Menu menu = item.getMenu();
+	        if (menu != null && menu.getCookingTime() != null) {
+	            totalPrepTime += menu.getCookingTime();
+	            itemCount++;
+	        }
+	    }
+
+	    int avgPrepTime = (itemCount > 0) ? totalPrepTime / itemCount : 0;
+
+	    // ✅ Get recent orders
+	    List<Order> recentOrders = orderRepository.findTop3ByRestaurantOrderByOrderDateDesc(restaurant);
+	    List<OrderSummaryDTO> recentOrderDTOs = recentOrders.stream().map(order -> {
+	        List<OrderItem> orderItems = orderItemRepository.findByOrderOrderId(order.getOrderId());
+
+	        List<OrderItemDTO> itemDTOs = orderItems.stream().map(item -> {
+	            OrderItemDTO dto = new OrderItemDTO();
+	            dto.setMenu(modelMapper.map(item.getMenu(), MenuDTO.class));
+	            dto.setQuantity(item.getQuantity());
+	            dto.setPrice(item.getPrice());
+	            return dto;
+	        }).collect(Collectors.toList());
+
+	        return new OrderSummaryDTO(
+	            order.getOrderId(),
+	            itemDTOs,
+	            order.getTotalPrice(),
+	            order.getStatus().name()
+	        );
+	    }).collect(Collectors.toList());
+
+	    // ✅ Limit popular items to 3
+	    List<PopularItemDTO> popularItems = menuRepository.findPopularItemsByRestaurantId(restaurant.getRestaurantId())
+	            .stream()
+	            .limit(3)
+	            .collect(Collectors.toList());
+
+	    return new DashboardDTO(
+	        totalOrders, menuItemCount, todaysRevenue, avgPrepTime, recentOrderDTOs, popularItems
+	    );
+	}
+
 
 
 

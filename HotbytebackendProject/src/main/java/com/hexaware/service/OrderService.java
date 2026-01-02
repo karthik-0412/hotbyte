@@ -29,5 +29,6 @@ public interface OrderService {
     List<OrderDTO> getOrdersByCustomerUsername(String username);
 	List<OrderDTO> getOrdersByRestaurant(int restaurantId);
 	List<OrderDTO> viewOrders(String username);
+	void rateOrder(int orderId, int rating, String review);
 
 }

@@ -1,11 +1,14 @@
 package com.hexaware.controller;
 
 import com.hexaware.dto.AuthRequest;
+import com.hexaware.dto.ChangePasswordRequest;
 import com.hexaware.dto.RegisterRequest;
 import com.hexaware.entity.User;
 import com.hexaware.repository.UserRepository;
+import com.hexaware.service.UserService;
 import com.hexaware.util.JwtUtil;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +34,10 @@ public class AuthController {
 	UserRepository userRepository;
 	@Autowired
 	PasswordEncoder passwordEncoder;
+	
+	@Autowired
+    private UserService userService;
+	
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
@@ -87,6 +94,19 @@ public class AuthController {
         user.setRole(registerRequest.getRole()); // Assume RegisterRequest has a role field
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully");
+    }
+    
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(
+            @RequestBody ChangePasswordRequest request,
+            Principal principal) {
+        String username = principal.getName();
+        boolean isChanged = userService.changePassword(username, request.getOldPassword(), request.getNewPassword());
+        if (isChanged) {
+            return ResponseEntity.ok("Password changed successfully.");
+        } else {
+            return ResponseEntity.badRequest().body("Old password is incorrect.");
+        }
     }
 }
 

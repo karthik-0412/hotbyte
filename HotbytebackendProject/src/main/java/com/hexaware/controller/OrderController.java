@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hexaware.dto.OrderCreateDTO;
 import com.hexaware.dto.OrderDTO;
+import com.hexaware.dto.RatingDTO;
 import com.hexaware.entity.Customer;
 import com.hexaware.entity.Restaurant;
 import com.hexaware.enums.OrderStatus;
@@ -92,5 +93,12 @@ public class OrderController {
     public ResponseEntity<OrderDTO> trackOrder(@PathVariable int id) {
         return ResponseEntity.ok(orderService.trackOrder(id));
     }
+    
+    @PostMapping("/orders/{orderId}/rate")
+    public ResponseEntity<?> rateOrder(@PathVariable int orderId, @RequestBody RatingDTO ratingDTO) {
+        orderService.rateOrder(orderId, ratingDTO.getRating(), ratingDTO.getReview());
+        return ResponseEntity.ok("Order rated successfully.");
+    }
+
 
 }
